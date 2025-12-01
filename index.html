@@ -30,29 +30,26 @@ function rotatePoint(x, y, t) {
 }
 
 // キャンバス上に y = tanθ x の直線を描く
-function drawTanLine(theta) {
-    const m = Math.tan(theta); // 傾き
-
+function drawOVLine(V) {
     ctx.strokeStyle = "rgba(255,0,0,0.5)";
     ctx.lineWidth = 2;
-    ctx.beginPath();
 
-    // 左端
+    // 傾きを OV の座標差から直接作る
+    const dx = V.x - O.x;
+    const dy = V.y - O.y;
+    const m = dy / dx;
+
+    // 左端と右端で y を作る（キャンバス座標のまま）
     let x1 = 0;
-    let y1 = m * (x1 - O.x) + O.y;
+    let y1 = O.y + m * (x1 - O.x);
 
-    // 右端
     let x2 = canvas.width;
-    let y2 = m * (x2 - O.x) + O.y;
+    let y2 = O.y + m * (x2 - O.x);
 
+    ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
-
-    // 直線ラベル「y = tanθ・x」
-    ctx.fillStyle = "red";
-    ctx.font = "20px sans-serif";
-    ctx.fillText("y = tanθ・x", O.x + 20, O.y - m * 100);
 }
 
 // VOH の三角形を描く
@@ -133,7 +130,7 @@ function draw() {
     drawTriangle(V);
 
     // y = tanθ x の直線
-    drawTanLine(theta);
+    drawOVLine(V);
 
     // 角度等表示
     ctx.fillStyle = "black";
