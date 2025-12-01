@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Rotating Square + Triangle VOH + tanθ Line</title>
+<style>
+  body { background:#222; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { background:#fff; }
+</style>
+</head>
+<body>
+
+<canvas id="cv" width="700" height="700"></canvas>
+
+<script>
+const canvas = document.getElementById("cv");
+const ctx = canvas.getContext("2d");
+
+const O = {x: 350, y: 350}; // 原点（中心）
+const R = 200;              // 円の半径
+const a = R * Math.sqrt(2); // 内接正方形の一辺長
+let theta = 0;              // 角度 θ（ラジアン）
+
+// 回転
+function rotatePoint(x, y, t) {
+    return {
+        x: x * Math.cos(t) - y * Math.sin(t),
+        y: x * Math.sin(t) + y * Math.cos(t)
+    };
+}
+
+// キャンバス上に y = tanθ x の直線を描く
+function drawTanLine(theta) {
+    const m = Math.tan(theta); // 傾き
+
+    ctx.strokeStyle = "rgba(255,0,0,0.5)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    // 左端
+    let x1 = 0;
+    let y1 = m * (x1 - O.x) + O.y;
+
+    // 右端
+    let x2 = canvas.width;
+    let y2 = m * (x2 - O.x) + O.y;
+
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // 直線ラベル「y = tanθ・x」
+    ctx.fillStyle = "red";
+    ctx.font = "20px sans-serif";
+    ctx.fillText("y = tanθ・x", O.x + 20, O.y - m * 100);
+}
+
+// VOH の三角形を描く
+function drawTriangle(V) {
+    const H = { x: V.x, y: O.y }; // 水平投影
+
+    ctx.strokeStyle = "#d33";
+    ctx.lineWidth = 2;
+
+    // OH
+    ctx.beginPath();
+    ctx.moveTo(O.x, O.y);
+    ctx.lineTo(H.x, H.y);
+    ctx.stroke();
+
+    // HV
+    ctx.beginPath();
+    ctx.moveTo(H.x, H.y);
+    ctx.lineTo(V.x, V.y);
+    ctx.stroke();
+
+    // OV
+    ctx.beginPath();
+    ctx.moveTo(O.x, O.y);
+    ctx.lineTo(V.x, V.y);
+    ctx.stroke();
+
+    // 点描画
+    ctx.fillStyle = "black";
+    ctx.beginPath(); ctx.arc(O.x, O.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(V.x, V.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(H.x, H.y, 4, 0, Math.PI*2); ctx.fill();
+
+    // ラベル
+    ctx.font = "18px sans-serif";
+    ctx.fillText("O", O.x + 5, O.y - 5);
+    ctx.fillText("V", V.x + 5, V.y - 5);
+    ctx.fillText("H", H.x + 5, H.y + 20);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, 700, 700);
+
+    // 円
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(O.x, O.y, R, 0, Math.PI*2);
+    ctx.stroke();
+
+    // 正方形（回転前）
+    const base = [
+        {x:  a/2, y:  a/2},
+        {x: -a/2, y:  a/2},
+        {x: -a/2, y: -a/2},
+        {x:  a/2, y: -a/2}
+    ];
+
+    // 回転後
+    const vertices = base.map(v => {
+        const p = rotatePoint(v.x, v.y, theta);
+        return { x: O.x + p.x, y: O.y + p.y };
+    });
+
+    // 正方形描画
+    ctx.strokeStyle = "#0077ff";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(vertices[0].x, vertices[0].y);
+    for (let i=1; i<4; i++) ctx.lineTo(vertices[i].x, vertices[i].y);
+    ctx.closePath();
+    ctx.stroke();
+
+    // 使用する頂点 V（右上）
+    const V = vertices[0];
+
+    // VOH 三角形
+    drawTriangle(V);
+
+    // y = tanθ x の直線
+    drawTanLine(theta);
+
+    // 角度等表示
+    ctx.fillStyle = "black";
+    ctx.font = "20px sans-serif";
+    ctx.fillText("θ (deg): " + (theta * 180 / Math.PI).toFixed(1), 20, 30);
+    ctx.fillText("tan θ : " + Math.tan(theta).toFixed(5), 20, 60);
+
+    // θ を更新
+    theta += 0.01;
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>
